@@ -83,15 +83,20 @@ Requirements:
 
   const renderPreview = () => {
     if (!generatedCode) return null;
-    let content = generatedCode;
-
     return (
       <iframe
         title="preview"
         className="w-full h-[400px] rounded-lg border border-gray-300 dark:border-gray-600"
-        srcDoc={content}
+        srcDoc={generatedCode}
       />
     );
+  };
+
+  // ✅ Fix: determine highlight language properly
+  const getHighlightLanguage = (lang) => {
+    if (lang.includes("js")) return "javascript";
+    if (lang.includes("css") || lang.includes("tailwind")) return "css";
+    return "html";
   };
 
   return (
@@ -109,7 +114,7 @@ Requirements:
           </h1>
         </div>
         <p className="text-gray-600 dark:text-gray-300 text-lg">
-          Generate front-end code (HTML/CSS/Tailwind)
+          Generate front-end code
         </p>
         <button
           onClick={toggleDarkMode}
@@ -189,13 +194,42 @@ Requirements:
                   <Copy className="w-4 h-4" /> Copy
                 </button>
               )}
+
               {generatedCode && (
                 <button
                   onClick={togglePreview}
                   className="flex items-center gap-1 px-3 py-1 border border-gray-500 text-gray-500 rounded-lg hover:bg-gray-500 hover:text-white transition"
                 >
-                  <Eye className="w-4 h-4" />{" "}
+                  <Eye className="w-4 h-4" />
                   {previewMode ? "Code View" : "Preview"}
+                </button>
+              )}
+
+              {/* Fullscreen Preview */}
+              {generatedCode && (
+                <button
+                  onClick={() => {
+                    const newWindow = window.open("", "_blank");
+                    newWindow.document.open();
+                    newWindow.document.write(`
+                      <!DOCTYPE html>
+                      <html lang="en">
+                      <head>
+                        <meta charset="UTF-8" />
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+                        <title>Full Screen Preview</title>
+                      </head>
+                      <body>
+                        ${generatedCode}
+                      </body>
+                      </html>
+                    `);
+                    newWindow.document.close();
+                  }}
+                  className="flex items-center justify-center w-8 h-8 border border-green-500 text-green-500 rounded-lg hover:bg-green-500 hover:text-white transition text-lg font-bold"
+                  title="Open Fullscreen Preview"
+                >
+                  /
                 </button>
               )}
             </div>
@@ -207,7 +241,7 @@ Requirements:
             ) : (
               <div className="rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
                 <SyntaxHighlighter
-                  language={language.includes("html") ? "html" : language}
+                  language={getHighlightLanguage(language)}
                   style={darkMode ? vscDarkPlus : prism}
                   customStyle={{
                     margin: 0,
